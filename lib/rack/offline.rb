@@ -64,7 +64,12 @@ module Rack
 
     def precache_key!
       hash = @config.cache.map do |item|
-        Digest::SHA2.hexdigest(@root.join(item).read)
+        # Use 'asset MD5 fingerprint' (created by Sprockets) if it already exists within the path, otherwise attempt to read contents of the file
+        if item =~ %r{^/assets/.+\-[a-f0-9]{32}\.}
+          Digest::SHA2.hexdigest(item)
+        else
+          Digest::SHA2.hexdigest(@root.join(item).read)
+        end
       end
 
       @key = Digest::SHA2.hexdigest(hash.join)
